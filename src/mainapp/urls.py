@@ -19,27 +19,13 @@ urlpatterns = [
     path("course_create/", views.CourseCreateView.as_view(), name="course_create"),
     path("course_update/<int:pk>/", views.CourseUpdateView.as_view(), name="course_update"),
     path("course_delete/<int:pk>/", views.CourseDeleteView.as_view(), name="course_delete"),
-    path(
-        "lesson_create/<int:pk>/", views.LessonCreateView.as_view(), name="lesson_create",
-    ),
-    path(
-        "lesson_update/<int:pk>/", views.LessonUpdateView.as_view(), name="lesson_update",
-    ),
-    path(
-        "lesson_delete/<int:pk>/", views.LessonDeleteView.as_view(), name="lesson_delete",
-    ),
+    path("lesson_create/<int:pk>/", views.LessonCreateView.as_view(), name="lesson_create",),
+    path("lesson_update/<int:pk>/", views.LessonUpdateView.as_view(), name="lesson_update",),
+    path("lesson_delete/<int:pk>/", views.LessonDeleteView.as_view(), name="lesson_delete",),
     # path("lesson1_1/", views.Lesson1_1PageView.as_view(), name="lesson1_1"),
     path("categories", views.CategoriesPageView.as_view(), name="categories"),
-    path(
-        "courses_category/<int:pk>/",
-        views.CoursesCategoryPageView.as_view(),
-        name="courses_category",
-    ),
-    path(
-        "course/<int:pk>/",
-        views.CourseDetailPageView.as_view(),
-        name="course_detail",
-    ),
+    path("courses_category/<int:pk>/", views.CoursesCategoryPageView.as_view(),name="courses_category",),
+    path("course/<int:pk>/", views.CourseDetailPageView.as_view(), name="course_detail",),
     path(
         "lessons_course/<int:pk>/",
         views.LessonsCoursePageView.as_view(),

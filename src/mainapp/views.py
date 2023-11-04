@@ -5,15 +5,15 @@ from time import time
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.paginator import Paginator, EmptyPage
 from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template import context
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView, TemplateView, View
+from django.views.generic import CreateView, ListView, TemplateView, View, UpdateView, DeleteView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
-from django.core.paginator import Paginator, EmptyPage
 
 from authapp.models import User
 from config.settings import BASE_DIR
@@ -125,13 +125,6 @@ class NewsPageView(TemplateView):
     template_name = "mainapp/news.html"
 
 
-class CourseUpdateView(CommonContextMixin, TemplateView):
-    template_name = "mainapp/in_progress.html"
-
-class CourseDeleteView(CommonContextMixin, TemplateView):
-    template_name = "mainapp/in_progress.html"
-
-
 class CourseDetailPageView(CommonContextMixin, TemplateView):
     template_name = "mainapp/course_detail.html"
 
@@ -196,7 +189,7 @@ class LessonDetailPageView(CommonContextMixin, TemplateView):
         context["lesson"] = lesson
         course = get_object_or_404(Course, pk=lesson.course.id)
         context["course"] = course
-        context["all_lessons"] = Lesson.objects.all().\
+        context["all_lessons"] = Lesson.objects.all(). \
             filter(course=lesson.course.id).order_by("order")
         context["course_author"] = False
         if self.request.user.id == course.author.id:
@@ -215,8 +208,10 @@ class LessonsCoursePageView(CommonContextMixin, TemplateView):
         context["lessons_course"] = Lesson.objects.all().filter(course=lesson.course.id)
         return context
 
+
 class LessonUpdateView(CommonContextMixin, TemplateView):
     template_name = "mainapp/in_progress.html"
+
 
 class LessonDeleteView(CommonContextMixin, TemplateView):
     template_name = "mainapp/in_progress.html"
@@ -243,8 +238,8 @@ class CabinetView(CommonContextMixin, TemplateView):
 
             courses_done = (
                 Order.objects.all()
-                .filter(buyer=self.request.user.id)
-                .filter(finished=True)
+                    .filter(buyer=self.request.user.id)
+                    .filter(finished=True)
             )
             # print(f'course_done:{courses_done_id[0].id}')
             courses_done_id = []
@@ -259,8 +254,8 @@ class CabinetView(CommonContextMixin, TemplateView):
 
             courses_active = (
                 Order.objects.all()
-                .filter(buyer=self.request.user.id)
-                .filter(finished=False)
+                    .filter(buyer=self.request.user.id)
+                    .filter(finished=False)
             )
             # print(f'courses_active:{courses_active}')
             courses_active_id = []
@@ -281,8 +276,8 @@ class CabinetView(CommonContextMixin, TemplateView):
 
             context["courses_top"] = (
                 Course.objects.all()
-                .exclude(id__in=filter_list)
-                .order_by("created_at")[:3]
+                    .exclude(id__in=filter_list)
+                    .order_by("created_at")[:3]
             )
 
         return context
@@ -382,7 +377,7 @@ class LessonCreateView(CommonContextMixin, CreateView):
         lesson_body = request.POST.get("body")
         lesson_author = request.user
         lesson_slug = (
-            str(lesson_title.lower().replace(" ", "-")[:20]) + "_" + str(int(time()))
+                str(lesson_title.lower().replace(" ", "-")[:20]) + "_" + str(int(time()))
         )
         lesson_order = int(request.POST.get("order"))
         lesson_vid_url = request.POST.get("video_url")
@@ -390,14 +385,14 @@ class LessonCreateView(CommonContextMixin, CreateView):
         # lesson_img_file = request.POST.get("img_file")
 
         if not all(
-            [
-                lesson_title,
-                lesson_text,
-                lesson_body,
-                lesson_author,
-                lesson_slug,
-                lesson_order,
-            ]
+                [
+                    lesson_title,
+                    lesson_text,
+                    lesson_body,
+                    lesson_author,
+                    lesson_slug,
+                    lesson_order,
+                ]
         ):
             messages.error(self.request, "Не все поля заполнены")
             return redirect("mainapp:lesson_create", pk=context.course_id)
@@ -433,6 +428,7 @@ class LessonCreateView(CommonContextMixin, CreateView):
 
 
 class CourseCreateView(CommonContextMixin, TemplateView):
+    model = Course
     template_name = "mainapp/course_create_form.html"
 
     def get_context_data(self, **kwargs):
@@ -449,13 +445,13 @@ class CourseCreateView(CommonContextMixin, TemplateView):
         course_cat_id = request.POST.get("cat_id")
 
         if not all(
-            [
-                course_name,
-                course_description,
-                course_img_url,
-                course_price,
-                course_cat_id,
-            ]
+                [
+                    course_name,
+                    course_description,
+                    course_img_url,
+                    course_price,
+                    course_cat_id,
+                ]
         ):
             messages.error(self.request, "Не все поля заполнены")
             return redirect("mainapp:course_create")
@@ -479,11 +475,58 @@ class CourseCreateView(CommonContextMixin, TemplateView):
         course.category.add(course_category)
         return redirect("mainapp:cabinet")
 
-class CourseCreateView(CommonContextMixin, TemplateView):
-    template_name = "mainapp/course_create_form.html"
 
-class CourseCreateView(CommonContextMixin, TemplateView):
-    template_name = "mainapp/course_create_form.html"
+class CourseUpdateView(CommonContextMixin, UpdateView):
+    model = Course
+    template_name = "mainapp/course_update_form.html"
+    fields = ['name', 'img_url', 'description', 'category', 'price']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["allcategs"] = Category.objects.all()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        course_name = request.POST.get("name")
+        course_description = request.POST.get("description")
+        course_img_url = request.POST.get("img_url")
+        course_img_file = request.POST.get("img_file")
+        course_price = request.POST.get("price")
+        course_cat_id = request.POST.get("cat_id")
+
+        if not all(
+                [
+                    course_name,
+                    course_description,
+                    course_img_url,
+                    course_price,
+                    course_cat_id,
+                ]
+        ):
+            messages.error(self.request, "Не все поля заполнены")
+            return redirect("mainapp:course_create")
+
+        course_category = get_object_or_404(Category, id=course_cat_id)
+        course = Course()
+        course.name = course_name
+        course.description = course_description
+        if course_img_url:
+            course.img_url = course_img_url
+        if course_img_file:
+            course.img_file = course_img_file
+        course.price = course_price
+        # course.category = course_category
+        course.author = request.user
+        course.slug = str(course_name.lower().replace(" ", "-")[:20])
+        course.save(update_fields=['name', 'img_url', 'description', 'price'])
+        # course.save()
+        course.category.add(course_category)
+        return redirect("mainapp:cabinet")
+
+
+class CourseDeleteView(CommonContextMixin, DeleteView):
+    model = Course
+    success_url = reverse_lazy("mainapp:cabinet")
 
 
 # Logging
@@ -517,13 +560,13 @@ class LogDownloadView(UserPassesTestMixin, View):
         course_cat_id = request.POST.get("cat_id")
 
         if not all(
-            [
-                course_name,
-                course_description,
-                # course_img_url,
-                course_price,
-                course_cat_id,
-            ]
+                [
+                    course_name,
+                    course_description,
+                    # course_img_url,
+                    course_price,
+                    course_cat_id,
+                ]
         ):
             messages.error(self.request, "Не все поля заполнены")
             return redirect("mainapp:course_create")

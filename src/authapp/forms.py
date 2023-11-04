@@ -5,6 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.forms import ImageField, FileInput
 
 from authapp.models import User
+from mainapp.models import Course
 
 
 class UserRegisterForm(UserCreationForm):  # create user profile
@@ -53,3 +54,19 @@ class UserUpdateForm(forms.ModelForm):
             if os.path.exists(self.instance.avatar.path):
                 os.remove(self.instance.avatar.path)
         return self.cleaned_data.get(arg_as_str)
+
+
+class CourseModelForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = (
+             "name",
+            "description",
+            "author",
+            "img_url",
+            "img_file",
+            "category",
+            "price",
+            "active",
+            "slug",
+        )

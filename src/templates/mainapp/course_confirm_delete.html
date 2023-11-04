@@ -1,0 +1,15 @@
+{% extends 'mainapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<br>
+<br>
+<br>
+<h1>Удалить курс</h1>
+<br>
+<form method="post">
+    {% csrf_token %}
+    <p>Вы действительно хотите удалить курс "{{ course.name }}"?</p>
+    <button class="mt-4 btn btn-outline-warning" style="width:150px;" type="submit">Удалить</button>
+</form>
+{% endblock %}
